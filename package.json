@@ -1,0 +1,33 @@
+{
+  "name": "brew-and-co",
+  "version": "1.0.0",
+  "description": "Brew & Co Café — Digital platform for online ordering, table reservations, and loyalty rewards.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@supabase/supabase-js": "^2.108.2",
+    "axios": "^1.18.1",
+    "lucide-react": "^0.525.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.57.0",
+    "react-router-dom": "^6.30.1",
+    "zod": "^3.24.3",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.10",
+    "@vitejs/plugin-react": "^4.5.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.10",
+    "vite": "^6.4.3",
+    "vite-plugin-pwa": "^0.21.1"
+  }
+}

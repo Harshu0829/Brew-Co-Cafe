@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Env files — NEVER commit real secrets
+.env
+.env.local
+.env.production
+.env.development
+backend/.env
+backend/.env.local
+backend/.env.production
+backend/.env.development
+
+# Keep the examples
+!.env.example
+!backend/.env.example
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+.parcel-cache/
