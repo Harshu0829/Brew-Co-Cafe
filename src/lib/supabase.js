@@ -60,13 +60,13 @@ export const supabase = createClient(
   SUPABASE_ANON_KEY || 'placeholder-anon-key',
   {
     auth: {
-      // PKCE is Supabase's recommended flow for SPAs
       flowType: 'pkce',
       persistSession: true,
       autoRefreshToken: true,
-      // Let Supabase auto-detect the ?code= from the URL and exchange it
-      // automatically — no need to call exchangeCodeForSession manually
-      detectSessionInUrl: true,
+      // false → AuthCallback is the ONLY place that calls exchangeCodeForSession.
+      // Prevents initAuthListener() in main.jsx from consuming the one-time
+      // PKCE code before AuthCallback mounts (race condition / double-fire fix).
+      detectSessionInUrl: false,
     },
   }
 );
