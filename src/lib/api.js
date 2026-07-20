@@ -6,9 +6,13 @@
  *  - Request interceptor: attaches Supabase JWT Bearer token automatically
  *  - Response interceptor: normalises errors into { error: string }
  *
+ * NOTE: getMenuItems() and getCategories() query Supabase directly from the
+ * frontend so they work on Vercel without a running backend server.
+ * All other endpoints (orders, payments, reservations, etc.) still go
+ * through the Express backend via VITE_API_URL.
+ *
  * Usage:
  *   import api from '@/lib/api';
- *   const items = await api.get('/menu/items?category=coffee');
  *   const order = await api.post('/orders', { items, pickup_time });
  */
 
@@ -51,11 +55,56 @@ export default api;
 
 // ── Typed helper functions ────────────────────────────────────────────────
 
-/** Fetch all active menu items, optionally filtered */
-export const getMenuItems = (params = {}) => api.get('/menu/items', { params });
+/**
+ * Fetch all active menu items directly from Supabase (works on Vercel without a backend).
+ * Mirrors what the Express /api/menu/items route does.
+ */
+export async function getMenuItems(params = {}) {
+  let query = supabase
+    .from('menu_items')
+    .select(`
+      id, name, description, price, image_url,
+      dietary_tags, is_available, display_order,
+      category:menu_categories(id, name, slug)
+    `)
+    .order('display_order');
 
-/** Fetch menu categories */
-export const getCategories = () => api.get('/menu/categories');
+  if (params.category) {
+    const { data: cat } = await supabase
+      .from('menu_categories')
+      .select('id')
+      .eq('slug', params.category)
+      .single();
+    if (cat) query = query.eq('category_id', cat.id);
+  }
+
+  if (params.dietary) {
+    const tags = params.dietary.split(',').map((t) => t.trim());
+    query = query.contains('dietary_tags', tags);
+  }
+
+  if (params.q) {
+    query = query.ilike('name', `%${params.q}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+/**
+ * Fetch active menu categories directly from Supabase.
+ * Mirrors what the Express /api/menu/categories route does.
+ */
+export async function getCategories() {
+  const { data, error } = await supabase
+    .from('menu_categories')
+    .select('id, name, slug, display_order')
+    .eq('is_active', true)
+    .order('display_order');
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
 /** Place a new order */
 export const createOrder = (body) => api.post('/orders', body);

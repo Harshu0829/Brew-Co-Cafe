@@ -16,7 +16,7 @@ export default function AccountPage() {
     if (!user) return;
     getOrders()
       .then((data) => setOrders(data || []))
-      .catch(() => setOrders([]))
+      .catch(() => setOrders([]))   // graceful fallback when backend is offline
       .finally(() => setOrdersLoading(false));
   }, [user]);
 
@@ -46,7 +46,7 @@ export default function AccountPage() {
           <p style={{ margin: '0 0 0.25rem', fontSize: '0.875rem', color: 'rgba(245,230,211,0.55)' }}>{user.email}</p>
           <span className="badge badge-amber" style={{ fontSize: '0.7rem', textTransform: 'capitalize' }}>{user.role || 'Customer'}</span>
         </div>
-        <button className="btn btn-ghost" style={{ color: '#f87171', fontSize: '0.85rem', gap: '0.4rem' }} onClick={() => { logout(); navigate('/'); }}>
+        <button className="btn btn-ghost" style={{ color: '#f87171', fontSize: '0.85rem', gap: '0.4rem' }} onClick={async () => { await logout(); navigate('/'); }}>
           <LogOut size={15} /> Logout
         </button>
       </div>
@@ -109,9 +109,9 @@ export default function AccountPage() {
           <p style={{ margin: 0, fontSize: '0.8rem', color: 'rgba(245,230,211,0.5)' }}>Permanently removes your data. This action cannot be undone.</p>
         </div>
         <button className="btn btn-danger" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
-          onClick={() => {
+          onClick={async () => {
             if (window.confirm('Are you sure? This will permanently delete your account and cannot be undone.')) {
-              logout();
+              await logout();
               navigate('/');
             }
           }}>

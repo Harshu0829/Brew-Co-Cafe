@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Coffee, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '@/lib/supabase';
+import { useAuthStore } from '@/store/authStore';
 
 /* ── Zod schemas ────────────────────────────────────────────────────────── */
 const loginSchema = z.object({
@@ -84,6 +85,18 @@ export default function AuthPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Wait for the auth listener to populate the token in Zustand
+  const waitForAuth = () =>
+    new Promise((resolve) => {
+      const unsub = useAuthStore.subscribe((state) => {
+        if (state.token) { unsub(); resolve(); }
+      });
+      // If token already set (e.g. session restored), resolve immediately
+      if (useAuthStore.getState().token) { unsub(); resolve(); }
+      // Timeout safety — don't block forever
+      setTimeout(() => { unsub(); resolve(); }, 5000);
+    });
+
   const schema = mode === 'login' ? loginSchema : registerSchema;
   const {
     register, handleSubmit, reset,
@@ -110,7 +123,8 @@ export default function AuthPage() {
           : error.message);
         return;
       }
-      // authStore listener handles state update — just navigate
+      // Wait for onAuthStateChange → authStore to sync, THEN navigate
+      await waitForAuth();
       navigate('/account', { replace: true });
 
     } else {
@@ -150,6 +164,7 @@ export default function AuthPage() {
       }
 
       // Email confirmation disabled — signed in immediately
+      await waitForAuth();
       navigate('/account', { replace: true });
     }
   };

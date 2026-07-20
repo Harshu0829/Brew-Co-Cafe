@@ -16,7 +16,7 @@ export default function Navbar() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  const handleLogout = async () => { await logout(); navigate('/'); };
 
   return (
     <header style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50 }}>

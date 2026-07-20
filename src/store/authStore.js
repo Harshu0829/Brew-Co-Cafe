@@ -54,6 +54,15 @@ export const useAuthStore = create(
       name: 'brewco-auth',
       // Only persist user object + token — isLoading is transient
       partialize: (s) => ({ user: s.user, token: s.token }),
+      // After rehydration from localStorage, isLoading can be resolved
+      // immediately if we already have a persisted token
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // If we have a persisted token, mark loading as done
+          // The onAuthStateChange listener will re-validate + refresh the token
+          state.isLoading = !state.token;
+        }
+      },
     }
   )
 );
