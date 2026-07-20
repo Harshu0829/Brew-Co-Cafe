@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Coffee, Clock, MapPin } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 const FEATURES = [
   { icon: Coffee, title: 'Order Online', desc: 'Browse our menu and place your order for quick pickup.' },
@@ -15,6 +16,7 @@ const MENU_HIGHLIGHTS = [
 ];
 
 export default function Landing() {
+  const { user } = useAuthStore();
   return (
     <div>
       {/* ── Hero ─────────────────────────────────────────── */}
@@ -61,15 +63,29 @@ export default function Landing() {
       <section className="section">
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', background: 'rgba(212,134,11,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                  <Icon size={24} style={{ color: 'var(--color-amber)' }} />
+            {FEATURES.map(({ icon: Icon, title, desc }) => {
+              // Loyalty Rewards card links to /account if logged in, /auth if not
+              const isLoyalty = title === 'Loyalty Rewards';
+              const cardContent = (
+                <div key={title} className="card" style={{ padding: '2rem', textAlign: 'center', cursor: isLoyalty ? 'pointer' : 'default', transition: 'transform 0.2s' }}
+                  onMouseEnter={isLoyalty ? (e) => e.currentTarget.style.transform = 'translateY(-3px)' : undefined}
+                  onMouseLeave={isLoyalty ? (e) => e.currentTarget.style.transform = '' : undefined}>
+                  <div style={{ width: 52, height: 52, borderRadius: 'var(--radius-md)', background: 'rgba(212,134,11,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                    <Icon size={24} style={{ color: 'var(--color-amber)' }} />
+                  </div>
+                  <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{title}</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'rgba(245,230,211,0.6)', margin: 0 }}>{desc}</p>
+                  {isLoyalty && (
+                    <p style={{ fontSize: '0.8rem', color: 'var(--color-amber)', marginTop: '0.75rem', marginBottom: 0 }}>
+                      {user ? 'View my stamps →' : 'Sign up to start earning →'}
+                    </p>
+                  )}
                 </div>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{title}</h3>
-                <p style={{ fontSize: '0.9rem', color: 'rgba(245,230,211,0.6)', margin: 0 }}>{desc}</p>
-              </div>
-            ))}
+              );
+              return isLoyalty
+                ? <Link key={title} to={user ? '/account' : '/auth'} style={{ textDecoration: 'none', color: 'inherit' }}>{cardContent}</Link>
+                : cardContent;
+            })}
           </div>
         </div>
       </section>
@@ -129,11 +145,23 @@ export default function Landing() {
       <section className="section" style={{ paddingTop: 0 }}>
         <div className="container">
           <div style={{ background: 'linear-gradient(135deg, var(--color-brew-700) 0%, var(--color-brew-600) 100%)', borderRadius: 'var(--radius-xl)', padding: '3rem 2rem', textAlign: 'center', border: '1px solid rgba(212,134,11,0.2)' }}>
-            <h2 className="font-display" style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>Ready for Your First Stamp?</h2>
-            <p style={{ color: 'rgba(245,230,211,0.7)', marginBottom: '1.5rem' }}>Sign up and start earning loyalty rewards with every order.</p>
-            <Link to="/auth" className="btn btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 2.25rem' }}>
-              Join Brew & Co — It's Free
-            </Link>
+            {user ? (
+              <>
+                <h2 className="font-display" style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>Welcome back, {user.name?.split(' ')[0]}! ☕</h2>
+                <p style={{ color: 'rgba(245,230,211,0.7)', marginBottom: '1.5rem' }}>Check your loyalty stamps and order history in your account.</p>
+                <Link to="/account" className="btn btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 2.25rem' }}>
+                  View My Stamps <ArrowRight size={18} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <h2 className="font-display" style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>Ready for Your First Stamp?</h2>
+                <p style={{ color: 'rgba(245,230,211,0.7)', marginBottom: '1.5rem' }}>Sign up and start earning loyalty rewards with every order.</p>
+                <Link to="/auth" className="btn btn-primary" style={{ fontSize: '1rem', padding: '0.75rem 2.25rem' }}>
+                  Join Brew & Co — It's Free
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
