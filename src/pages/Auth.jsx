@@ -85,16 +85,17 @@ export default function AuthPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Wait for the auth listener to populate the token in Zustand
+  // Wait for the auth listener to populate the token in Zustand.
+  // With the immediate token-set in initAuthListener, this resolves in ~100ms.
   const waitForAuth = () =>
     new Promise((resolve) => {
       const unsub = useAuthStore.subscribe((state) => {
         if (state.token) { unsub(); resolve(); }
       });
-      // If token already set (e.g. session restored), resolve immediately
+      // Resolve immediately if token is already set
       if (useAuthStore.getState().token) { unsub(); resolve(); }
-      // Timeout safety — don't block forever
-      setTimeout(() => { unsub(); resolve(); }, 5000);
+      // Safety timeout — 3s max
+      setTimeout(() => { unsub(); resolve(); }, 3000);
     });
 
   const schema = mode === 'login' ? loginSchema : registerSchema;

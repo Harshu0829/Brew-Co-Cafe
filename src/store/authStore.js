@@ -92,26 +92,38 @@ export function initAuthListener() {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         const supaUser = session.user;
 
-        // Fetch the extended profile (role, loyalty_stamps) from public.users
-        const { profile } = await fetchUserProfile(supaUser.id);
-
-        const appUser = {
+        // ── Step 1: set token + basic user immediately ─────────────────────
+        // This unblocks waitForAuth() in Auth.jsx so navigation happens at once
+        // instead of waiting for the profile DB round-trip.
+        const basicUser = {
           id:             supaUser.id,
           email:          supaUser.email,
-          name:           profile?.name
-                          || supaUser.user_metadata?.full_name
+          name:           supaUser.user_metadata?.full_name
                           || supaUser.email?.split('@')[0],
-          phone:          profile?.phone  || null,
-          role:           profile?.role   || 'customer',
-          loyalty_stamps: profile?.loyalty_stamps ?? 0,
+          phone:          null,
+          role:           'customer',
+          loyalty_stamps: 0,
         };
-
-        // Always update token — it may have been silently refreshed
         useAuthStore.setState({
-          user:      appUser,
+          user:      basicUser,
           token:     session.access_token,
           isLoading: false,
         });
+
+        // ── Step 2: fetch extended profile in background ────────────────────
+        // Updates name, role, loyalty_stamps, phone once the DB responds.
+        fetchUserProfile(supaUser.id).then(({ profile }) => {
+          if (!profile) return;
+          useAuthStore.setState({
+            user: {
+              ...basicUser,
+              name:           profile.name           || basicUser.name,
+              phone:          profile.phone          || null,
+              role:           profile.role           || 'customer',
+              loyalty_stamps: profile.loyalty_stamps ?? 0,
+            },
+          });
+        }).catch(() => { /* profile fetch failed — basicUser still works */ });
       }
     }
   );
