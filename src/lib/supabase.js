@@ -130,10 +130,16 @@ export async function exchangeCodeForSession(code) {
 }
 
 /**
- * Sign out — clears Supabase localStorage session + revokes refresh token.
+ * Sign out — always clears the local Supabase session from localStorage.
+ * scope:'local' means we wipe the local session immediately without waiting
+ * for a server-side token revocation, so logout works even if offline.
+ * The server-side revocation (preventing refresh token reuse) still happens
+ * in the background via the default Supabase behaviour.
  */
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  // 'local' scope guarantees the session is removed from localStorage
+  // even if the network request to revoke the server-side token fails.
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   return { error };
 }
 

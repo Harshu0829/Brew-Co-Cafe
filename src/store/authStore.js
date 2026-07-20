@@ -38,10 +38,12 @@ export const useAuthStore = create(
       /** Called by AuthCallback and by the onAuthStateChange listener */
       setAuth: (user, token) => set({ user, token, isLoading: false }),
 
-      /** Clear everything on logout */
+      /** Clear everything on logout — clears UI state first, then kills the session */
       logout: async () => {
-        await signOut();
+        // Clear Zustand immediately so the UI reacts at once (navbar, guards, etc.)
         set({ user: null, token: null, isLoading: false });
+        // Then clear the Supabase localStorage session (scope:'local' = always clears locally)
+        try { await signOut(); } catch { /* session already cleared above */ }
       },
 
       /** Patch specific user fields (e.g. after loyalty stamp added) */
